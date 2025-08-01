@@ -1,0 +1,85 @@
+import os
+import glob
+import shutil
+
+_code = ""
+
+_code_a = """
+pub struct  Func<'a>{
+    pub name: &'a str,
+    pub func: fn(),
+}
+
+pub static  TEST_ARRAY: &[Func] = &[
+"""
+_code_b ="\n];\n"
+
+def main():
+    ref = ref_set("src/test_menu/_REF")
+    #print(ref)
+    test_list = get_file_list('src/test_menu/_*.rs')
+    #print(test_list)
+    code_gen(test_list, ref)
+    print(_code)
+    code_save("src/test_menu.rs", "src/_old")
+
+def code_save(filepath, todir):
+    global _code
+    shutil.copy(filepath, todir)
+    with open(filepath, mode='w') as f:
+       f.write(_code)
+
+def ref_set(ref):
+    global _code
+    text = "-- undefine --\n"
+    try:
+        with open(ref,encoding='utf-8') as f:
+            text = f.read()
+            _code += "/*\n"
+            _code += text
+            _code += "*/\n\n"
+    except:
+        print('not found:', ref)
+        #_code += text
+    return text
+
+def ref_value_gen(text):
+    global _code
+    _code += "\npub static r#REF: &str = r#\"\n"
+    _code += text
+    _code += "\"#;\n"
+
+
+def code_gen(_list, _ref):
+    global _code
+    global _code_a
+
+    for entry in _list:
+        #print(entry)
+        _code += "mod " + entry[:-3]  + ";\n"
+        
+    ref_value_gen(_ref)
+
+    _code += _code_a
+    _code += "\n"
+    for entry in _list:
+        #print(entry)
+        name =  entry[:-3]
+        param = name.split('_')
+        desc = "\"" + param[1] + " " + param[2] + "\""
+        spc1 = ' ' * ( 20 - len(desc))
+        spc2 = ' ' * ( 20 - len(name))
+        _code += " Func{ name: " +  desc + "," + spc1 + "func: " + name  + "::main" + spc2 + "},\n"
+    _code += _code_b
+
+def get_file_list(path_glob):
+    _list = [];
+    for f in glob.glob(path_glob):
+         _list.append(os.path.split(f)[1])
+
+    _list.sort()
+    return _list
+
+if __name__ == "__main__":
+    main()
+
