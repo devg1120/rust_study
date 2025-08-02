@@ -12,6 +12,10 @@ mod _15_closure;
 mod _16_lifetime;
 mod _17_iterator;
 mod _18_error_operation;
+mod _19_fmt_display;
+mod _20_rc;
+mod _21_cell;
+mod _25_collections;
 mod _30_thread_channel;
 
 pub static r#REF: &str = r#"
@@ -35,6 +39,10 @@ pub static  TEST_ARRAY: &[Func] = &[
  Func{ name: "16 lifetime",                 func: _16_lifetime::main                  },
  Func{ name: "17 iterator",                 func: _17_iterator::main                  },
  Func{ name: "18 error_operation",          func: _18_error_operation::main           },
+ Func{ name: "19 fmt_display",              func: _19_fmt_display::main               },
+ Func{ name: "20 rc",                       func: _20_rc::main                        },
+ Func{ name: "21 cell",                     func: _21_cell::main                      },
+ Func{ name: "25 collections",              func: _25_collections::main               },
  Func{ name: "30 thread_channel",           func: _30_thread_channel::main            },
 
 ];
