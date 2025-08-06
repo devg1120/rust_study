@@ -1,0 +1,367 @@
+
+/*
+ *
+ */
+
+#![allow(unused_assignments)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+/*
+#[derive(Debug)]
+println!("{:#?}", foo);
+*/
+pub fn main() {
+
+
+println!("--------------------  ");
+{
+use axum::{routing::get, routing::post, Router};
+use axum::{extract, response};
+use serde::{Serialize, Deserialize};
+use axum::async_trait;
+use axum::body::Body;
+use tower::BoxError;
+use http::Response;
+
+use axum::extract::Path;
+use std::collections::HashMap;
+use axum::response::IntoResponse;
+//use axum_core::response::IntoResponse;
+use axum::RequestPartsExt;
+use axum::Json;
+
+#[tokio::main]
+async fn main() {
+
+    let app = Router::new().route("/", get(root_handler))
+                           .route("/ping", post(ping))
+                           .route("/users/:user_id/posts/:post_id", get(user_post))
+                           .route("/users/:user_id", post(user_message))
+                           .route("/users2/:user_id/:name", post(user_message2));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+async fn root_handler() -> &'static str {
+    "Hello, World!\n"
+}
+
+#[derive(Deserialize)]
+struct Ping {
+    count: i64,
+}
+
+#[derive(Serialize)]
+struct Pong {
+    count: i64,
+}
+
+
+async fn ping(extract::Json(ping): extract::Json<Ping>) -> response::Json<Pong> {
+    response::Json(Pong {
+        count: ping.count + 1,
+    })
+}
+
+
+//async fn user_post(extract::UrlParams(params): extract::UrlParams<(u64, u64)>) -> String {
+async fn user_post(extract::Path(params): extract::Path<(u64, u64)>) -> String {
+    let user_id = params.0;
+    let post_id = params.1;
+    format!("user_id: {}, post_id: {}\n", user_id, post_id)
+}
+
+
+/**************************************/
+#[derive(Deserialize)]
+struct Name {
+    name: String,
+}
+
+#[derive(Serialize)]
+struct Message {
+    message: String,
+}
+
+async fn user_message(
+    extract::Path(params): extract::Path<(u64,)>,
+    extract::Json(name): extract::Json<Name>,
+) -> response::Json<Message> {
+    let user_id = params.0;
+    let name = name.name;
+    response::Json(Message {
+        message: format!("Hello {}, your id is {}", name, user_id),
+    })
+}
+
+
+/**************************************/
+#[derive(Deserialize)]
+struct Params {
+    //user_id: u64,
+    user_id: String,
+    name: String,
+}
+
+
+#[async_trait]
+//impl<B> extract::FromRequest<B> for Params
+impl<B> extract::FromRequestParts<B> for Params
+where
+        B: Send + Sync,
+{
+    type Rejection = Response<Body>;
+
+    async fn from_request_parts(
+        parts: &mut axum::http::request::Parts,
+        state: &B,
+        ) -> Result<Self, Self::Rejection> {
+
+       let params: Path<HashMap<String, String>> =
+            parts.extract().await.map_err(IntoResponse::into_response)?;
+
+      for key in params.keys() {
+         println!("{}", key);
+
+      }
+       let user_id = params
+            .get("user_id")
+            .unwrap();
+
+       let name = params
+            .get("name")
+            .unwrap();
+
+
+        //let  name = "GUSA";
+
+        Ok(Params {
+            user_id: user_id.clone(),
+            name: name.clone(),
+        })
+    }
+}
+
+//pub struct XXEncrypt<T>(pub T);
+
+#[derive(Deserialize)]
+struct JsonData {
+    name: String,
+}
+
+/*
+use axum::extract::Request;
+#[async_trait]
+impl<T, S> extract::FromRequest<S> for JsonData
+where
+    S: Send + Sync,
+{
+    //type Rejection = ApiError;
+    type Rejection = Response<Body>;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        let Json(value) = Json::<T>::from_request(req, state)
+            .await
+            .map_err(|err| ApiError::BadRequest(format!("Invalid JSON: {}", err)))?;
+
+        let name = value.0.get("name")
+            .unwrap()
+            .as_str()
+            .unwrap();
+
+        Ok(JsonData {
+            name: name.to_string(),
+        })
+    }
+}
+*/
+/*
+use axum::extract::Request;
+#[async_trait]
+impl<S, B, T > extract::FromRequest<B> for JsonData
+    where
+        //B: Send + 'static,
+B: Send + 'static + test_menu::_11_json_api::main::_::_serde::Deserialize<'_>,
+        S: Send + Sync,
+{
+    type Rejection = Response<Body>;
+
+    async fn from_request(req: Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
+        let bytes = axum::body::to_bytes(req.into_body(), 100000).await.unwrap();
+
+        let value = serde_json::from_slice::<B>(&bytes).unwrap();
+        let name = value.0.get("name")
+            .unwrap()
+            .as_str()
+            .unwrap();
+
+        Ok(JsonData {
+            name: name.to_string(),
+        })
+    }
+}
+*/
+
+use serde_json::Value;
+use http::StatusCode;
+use axum::body::Bytes;
+use axum::body::Body;
+use axum::extract::{ FromRequest, Json, Request};
+use axum::http::request::{self, Parts};
+use axum::http::StatusCode;
+use serde::de::DeserializeOwned;
+use serde_json::{to_string, Value};
+
+#[async_trait]
+impl<T,S> extract::FromRequest<S> for JsonData
+where
+    T: DeserializeOwned,
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, axum::Json<Value>);
+
+    async fn from_request(req: extract::Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
+        let (parts, body) = req.into_parts();
+        let req = extract::Request::from_parts(parts, body);
+        let bt = Bytes::from_request(req, state).await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                axum::Json(Value::String(format!(
+                    "request bytes error {}",
+                    e.to_string()
+                ))),
+            )
+        })?;
+        let b: Vec<u8> = bt.as_ref().to_vec();
+        let s = b.iter().map(|&x| x as char).collect::<String>();
+        print!("{:?}", &bt);
+        serde_json::from_str(s.as_str()).map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                axum::Json(Value::String(format!("unknown error {}", e.to_string()))),
+            )
+        })?;
+
+        let json: T = serde_json::from_str(s.as_str()).map_err({
+            |e| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    axum::Json(Value::String(format!("unknown error {}", e.to_string()))),
+                )
+            }
+        })?;
+        let name = json.0.get("name")
+            .unwrap()
+            .as_str()
+            .unwrap();
+
+        Ok(JsonData {
+            name: name.to_string(),
+        })
+    }
+}
+
+/*
+use axum::extract::FromRequest;
+use axum::extract::RequestParts;
+;
+#[async_trait]
+impl<B> FromRequest<B> for Params
+where
+    B: Send + http_body::Body,
+    B::Data: Send,
+    B::Error: Into<BoxError>,
+{
+    type Rejection = Response<Body>;
+
+    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
+        /*
+        let url_params = extract::UrlParamsMap::from_request(req)
+            .await
+            .map_err(IntoResponse::into_response)?;
+        let user_id = url_params
+            .get_typed("user_id")
+            .unwrap()
+            .unwrap();
+        */
+        let user_id = "888";
+
+        let json_params: extract::Json<serde_json::Value> = extract::Json::from_request(req)
+            .await
+            .map_err(IntoResponse::into_response)?;
+        let name = json_params.0.get("name")
+            .unwrap()
+            .as_str()
+            .unwrap();
+
+        Ok(Params {
+            user_id: user_id,
+            name: name.to_string(),
+        })
+    }
+}
+*/
+
+#[derive(Serialize)]
+struct Message2 {
+    message: String,
+}
+
+async fn user_message2(
+    params: Params,
+    j_data: JsonData,
+) -> response::Json<Message2> {
+    let p_user_id = params.user_id;
+    let p_name = params.name;
+    let j_name = j_data.name;
+    response::Json(Message2 {
+        message: format!("Hello {}, your id is {}: {}", j_name, p_user_id , p_name),
+    })
+}
+async fn user_message3(
+    params: Params,
+    extract::Json(j_name): extract::Json<Name>
+) -> response::Json<Message2> {
+    let p_user_id = params.user_id;
+    let p_name = params.name;
+    let j_name = j_name.name;
+    response::Json(Message2 {
+        message: format!("Hello {}, your id is {}: {}", j_name, p_user_id , p_name),
+    })
+}
+async fn user_message4(
+    params: Params,
+    extract::Json(j_name): extract::Json<Name>
+) -> response::Json<Message2> {
+    let user_id = params.user_id;
+    let j_name = j_name.name;
+    response::Json(Message2 {
+        message: format!("Hello {}, your id is {}", j_name, user_id ),
+    })
+}
+
+/**************************************/
+
+println!("
+$ curl http://localhost:3000/
+ Hello, World!
+$ curl -H 'Content-Type: application/json' -d ' {{\"count\": 0}}' http://localhost:3000/ping
+ {{\"count\": 1}}
+$ curl -H 'Content-Type: application/json' -d ' {{\"count\": 3}}' http://localhost:3000/ping
+ {{\"count\": 4}}
+$ curl http://localhost:3000/users/1/posts/2
+user_id: 1, post_id: 2
+$ curl -H 'Content-Type: application/json' -d '{{\"name\": \"techno\"}}' http://localhost:3000/users/1
+{{\"message\":\"Hello techno, your id is 1\"}}
+$ curl -H 'Content-Type: application/json' -d '{{\"name\": \"techno\"}}' http://localhost:3000/users2/99/gusa
+{{\"message\":\"Hello gusa, your id is 1\"}}
+
+");
+
+main();
+
+}
+
+}
+
