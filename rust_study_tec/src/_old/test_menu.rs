@@ -9,7 +9,7 @@ mod _13_lifetime;
 mod _20_oop;
 mod _30_closure;
 mod _40_adt_enum;
-mod _50_async;
+mod _50_async_tokio;
 
 pub static r#REF: &str = r#"
 title:Rust ツアー
@@ -29,6 +29,6 @@ pub static  TEST_ARRAY: &[Func] = &[
  Func{ name: "20 oop",                      func: _20_oop::main                       },
  Func{ name: "30 closure",                  func: _30_closure::main                   },
  Func{ name: "40 adt_enum",                 func: _40_adt_enum::main                  },
- Func{ name: "50 async",                    func: _50_async::main                     },
+ Func{ name: "50 async_tokio",              func: _50_async_tokio::main               },
 
 ];

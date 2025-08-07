@@ -8,6 +8,8 @@ https://zenn.dev/hakoten/articles/058a681ba6fe4a
 
 mod _01_trait_basic;
 mod _02_trait_object;
+mod _03_trait_generic;
+mod _20_example;
 
 pub static r#REF: &str = r#"
 Rustのトレイトとトレイト境界を理解する
@@ -26,5 +28,7 @@ pub static  TEST_ARRAY: &[Func] = &[
 
  Func{ name: "01 trait_basic",              func: _01_trait_basic::main               },
  Func{ name: "02 trait_object",             func: _02_trait_object::main              },
+ Func{ name: "03 trait_generic",            func: _03_trait_generic::main             },
+ Func{ name: "20 example",                  func: _20_example::main                   },
 
 ];
