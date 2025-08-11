@@ -1,0 +1,22 @@
+
+# src/test_menu.py    rebuild
+
+   python3 make_test_menu.py
+
+
+# test run
+
+  cargo run          ... all test exec
+
+  cargo run 26       ... select test exec
+  cargo run async
+
+
+
+  cargo run menu     ... menu listting
+  cargo run M        ... menu listting
+
+
+並行性（Concurrence）と並列性（Parallel）
+
+

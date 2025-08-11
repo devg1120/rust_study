@@ -1,0 +1,100 @@
+
+/*
+ *
+ */
+
+#![allow(unused_assignments)]
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
+/*
+#[derive(Debug)]
+println!("{:#?}", foo);
+*/
+pub fn main() {
+
+
+println!("--------------------  static-constructor-di");
+{
+pub trait SvcA {
+    fn a(&self) -> String;
+}
+
+pub trait SvcB {
+    fn b(&self) -> String;
+}
+
+pub struct ImplA {}
+
+impl SvcA for ImplA {
+    fn a(&self) -> String {
+        "impl-a".to_owned()
+    }
+}
+
+pub struct ImplB<A: SvcA> {
+    a: A,
+}
+
+impl<A: SvcA> SvcB for ImplB<A> {
+    fn b(&self) -> String {
+        format!("a: {}, b: {}", self.a.a(), "impl-b")
+    }
+}
+
+fn main() {
+    struct MockA {}
+    impl SvcA for MockA {
+        fn a(&self) -> String {
+            "mock-a".to_owned()
+        }
+    }
+
+    let b = ImplB { a: MockA {} };
+    assert_eq!(b.b(), "a: mock-a, b: impl-b");
+}
+
+pub fn use_b<B: SvcB>(b: B) -> String {
+    format!("[use] {}", b.b())
+}
+main();
+}
+
+println!("--------------------  dynamic-constructor-di");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+println!("--------------------  ");
+{
+
+}
+}
+
